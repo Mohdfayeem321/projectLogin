@@ -25,7 +25,7 @@ mongoose.connect("mongodb+srv://raj_3028:kWaM507ps0Icsdg0@cluster0.pw23ckf.mongo
 //         next()
 //     })
 
-//===================== Global Middleware for All Route =====================//
+//===================== Global Middleware for All Route =====================================//
 app.use('/', route)
 
 //===================== It will Handle error When You input Wrong Route =====================//
@@ -35,9 +35,9 @@ app.use(function (req, res) {
     return res.status(400).send({ status: "400", msg: "Path not Found." })
 })
 
-//===================== PORT =====================//
+//===================== PORT ================================================================//
 app.listen(process.env.PORT || 3000, function () {
     console.log('Express App Running on Port: ' + (process.env.PORT || 3000))
 });
 
-//<<<=======================================================================>>>//
+//<<<========================================================================================//

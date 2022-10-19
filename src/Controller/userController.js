@@ -29,6 +29,7 @@ const createUser = async (req, res) => {
 
         //===================== Convert from JSON String to JSON Object of Address =====================//
         //address = JSON.parse(address)
+        if((typeof address)!=Object) return res.status(400).send({status:false, message:"please enter address in object form"})
         data.address = JSON.parse(address)
 
         //===================== Destructuring Address from Object Data =================================//
@@ -173,7 +174,7 @@ const userLogin = async function (req, res) {
                 exp: Math.floor(Date.now() / 1000) + 60 * 60
             }
 
-            const token = JWT.sign({ payload }, "We-are-from-Group-21", { expiresIn: 60 * 60 });
+            const token = JWT.sign({ payload }, "We-are-from-Group-21", { expiresIn: "5d" });
 
             //=====================Create a Object for Response=====================//
             let obj = { userId: userData['_id'], token: token }

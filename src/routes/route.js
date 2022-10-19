@@ -44,7 +44,7 @@ router.get("/users/:userId/cart", Authentication, Authorization, getCart)
 
 router.delete("/users/:userId/cart", Authentication, Authorization, deleteCart)
 
-router.put("/users/:userId/cart", updateCart)
+router.put("/users/:userId/cart",Authentication, Authorization, updateCart)
 
 
 
