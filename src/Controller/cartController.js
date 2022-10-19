@@ -1,9 +1,6 @@
+//===================== Importing Module and Packages =====================//
 const cartModel = require('../Model/cartModel')
-
 const productModel = require('../Model/productModel')
-
-const { findOneAndUpdate } = require('../Model/userModel')
-
 const validator = require('../Validator/validator')
 
 
@@ -41,8 +38,10 @@ const createCart = async (req, res) => {
             //===================== Checking the CartId is Valid or Not by Mongoose =====================//
             if (!validator.isValidObjectId(cartId)) return res.status(400).send({ status: false, message: `This cartId: ${cartId} is not valid!.` })
 
-            let checkCart = await cartModel.findOne({ userId: userId }).select({ _id: 0, items: 1, totalPrice: 1, totalItems: 1 })
+            //===================== Fetch the Cart Data from DB =====================//
+            let checkCart = await cartModel.findOne({ _id: cartId }).select({ _id: 0, items: 1, totalPrice: 1, totalItems: 1 })
 
+            //===================== This condition will run when Card Data is present =====================//
             if (checkCart) {
 
                 let items = checkCart.items
@@ -117,9 +116,6 @@ const createCart = async (req, res) => {
 
                 //===================== Final Cart Creation =====================//
                 let cart = await cartModel.create(obj)
-                // console.log(cart)
-                // console.log(Object.keys(cart))
-                //console.log("newly created cart with product")
 
                 return res.status(201).send({ status: true, message: "Success", data: cart })
 
@@ -131,129 +127,155 @@ const createCart = async (req, res) => {
 
     } catch (error) {
 
-        res.status(500).send({ status: false, error: error.message })
-    }
-}
-
-
-//===========================================================================================//
-
-
-const getCart = async (req, res) => {
-    try {
-        let userId = req.params.userId;
-
-        let carts = await cartModel.findOne({ userId: userId }).populate('items.productId')
-
-        if (!carts) return res.status(404).send({ status: false, message: "cart does not exist!" })
-
-        return res.status(200).send({ status: true, message: 'Success', data: carts })
-    } catch (error) {
         return res.status(500).send({ status: false, error: error.message })
     }
 }
 
 
-const deleteCart = async (req, res) => {
-    try {
-        let userId = req.params.userId;
-
-        let cartDelete = await cartModel.findOneAndUpdate({ userId: userId }, { $set: { items: [], totalPrice: 0, totalItems: 0 } }, { new: true })
-
-        if (!cartDelete) return res.status(404).send({ status: false, message: "cart does not exist!" })
-
-        return res.status(204).send({ status: true, message: "Your cart is empty!" })
-    } catch (error) {
-        return res.status(500).send({ status: false, error: error.message })
-    }
-}
-
-
-//=========================================================================================//
-
+//<<<===================== This function is used for Update Cart Data =====================>>>//
 const updateCart = async (req, res) => {
+
     try {
 
-        let userId = req.params.userId
-       
         let data = req.body;
-        let { cartId, productId, removeProduct } = data;
-        if (removeProduct !== '0' && removeProduct !== '1') { return res.status(400).send({ status: false, message: "RemoveProduct must be 0 or 1!" }) }
 
-        let getProduct = await productModel.findOne({ isDeleted: false, _id: productId })
+        //===================== Destructuring Cart Body Data =====================//
+        let { cartId, productId, removeProduct } = data;
+
+        //===================== Checking the RemoveProduct Value =====================//
+        if (removeProduct != 0 && removeProduct != 1) { return res.status(400).send({ status: false, message: "RemoveProduct must be 0 or 1!" }) }
+
+        //===================== Validation for CartID =====================//
+        if (!cartId) return res.status(400).send({ status: false, message: "Please Enter CartId" })
+        if (!validator.isValidObjectId(cartId)) return res.status(400).send({ status: false, message: "Please Enter Valid Cart Id" })
+
+        //===================== Validation for ProductID =====================//
+        if (!productId) return res.status(400).send({ status: false, message: "Please Enter productId" })
+        if (!validator.isValidObjectId(productId)) return res.status(400).send({ status: false, message: "Please Enter Valid productId" })
+
+        //===================== Fetch the Product Data From DB =====================//
+        let getProduct = await productModel.findOne({ _id: productId, isDeleted: false })
         if (!getProduct) return res.status(404).send({ status: false, message: "Product not exist!" })
 
+        //===================== Fetch the Cart Data From DB =====================//
+        let getCart = await cartModel.findOne({ items: { $elemMatch: { productId: productId } } })
+        if (!getCart) return res.status(404).send({ status: false, message: "Cart does not exist with this productId!" })
 
-        let getCart = await cartModel.findOne({ items: { $elemMatch: { productId: productId }, userId:userId } })
-
-        if (!getCart) return res.status(404).send({ status: false, message: "Product does not exist with this cartId!" })
-
+        //===================== Set the Total Amount =====================//
         let totalAmount = getCart.totalPrice - getProduct.price
 
+        //===================== Store the Item Array inside arr variable =====================//
         let arr = getCart.items
         let totalItems = getCart.totalItems
 
+        //===================== Condition for RemoveProduct value as 1 =====================//
         if (removeProduct == 1) {
+
+            //===================== loop for arr =====================//
             for (let i = 0; i < arr.length; i++) {
+
+                //===================== Condition for checking those two Product is matched or not =====================//
                 if (arr[i].productId.toString() == productId) {
                     arr[i].quantity -= 1
+
+                    //===================== Condition for checking the Product Quantity is 0 or not =====================//
                     if (arr[i].quantity < 1) {
+
                         totalItems--
-                        let update1 = await cartModel.findOneAndUpdate({ _id:cartId }, { $pull: { items: { productId: productId } }, totalItems: totalItems }, { new: true })
+
+                        //===================== Pull that Product from that cart and Update values =====================//
+                        let update1 = await cartModel.findOneAndUpdate({ _id: cartId }, { $pull: { items: { productId: productId } }, totalItems: totalItems }, { new: true })
+
+                        //===================== Fetch item and total item and set in Variable =====================//
                         arr = update1.items
                         totalItems = update1.totalItems
                     }
                 }
             }
 
-            let updatePrice = await cartModel.findOneAndUpdate({ _id:cartId, userId:userId }, { $set: { totalPrice: totalAmount, items: arr, totalItems: totalItems } }, { new: true })
+            //===================== Update that cart =====================//
+            let updatePrice = await cartModel.findOneAndUpdate({ _id: cartId }, { $set: { totalPrice: totalAmount, items: arr, totalItems: totalItems } }, { new: true })
 
-            if(!updatePrice) return res.status(404).send({ status: false, message: "Product does not exist in your cart."})
             return res.status(200).send({ status: true, message: "Success", data: updatePrice })
 
         }
 
+        //===================== Condition for RemoveProduct value as 0 =====================//
         if (removeProduct == 0) {
-            let totalItem = getCart.totalItems - 1
-            for (let i = 0; i < arr.length; i++) {
-                let prodPrice = getCart.totalPrice - (arr[i].quantity * getProduct.price)
-                if (arr[i].productId.toString() == productId) {
-                    let update2 = await cartModel.findOneAndUpdate({ _id:cartId, userId:userId }, { $pull: { items: { productId: productId } }, totalPrice: prodPrice, totalItems: totalItem }, { new: true })
 
-                    if(!update2) return res.status(404).send({ status: false, message: "Product does not exist in your cart."})
+            //===================== Fetch Total Items and Decrese 1 item =====================//
+            let totalItem = getCart.totalItems - 1
+
+            //===================== loop for arr =====================//
+            for (let i = 0; i < arr.length; i++) {
+
+                //===================== Decrese the TotalPrice  =====================//
+                let prodPrice = getCart.totalPrice - (arr[i].quantity * getProduct.price)
+
+                //===================== Condition for checking those two Product is matched or not =====================//
+                if (arr[i].productId.toString() == productId) {
+
+                    //===================== Pull that Product from that cart and Update values =====================//
+                    let update2 = await cartModel.findOneAndUpdate({ _id: cartId }, { $pull: { items: { productId: productId } }, totalPrice: prodPrice, totalItems: totalItem }, { new: true })
+
                     return res.status(200).send({ status: true, message: "Success", data: update2 })
                 }
             }
         }
 
-
-
-
-
     } catch (error) {
+
         return res.status(500).send({ status: false, error: error.message })
     }
-
-
 }
 
-// PUT /users/:userId/cart (Remove product / Reduce a product's quantity from the cart)
-// - Updates a cart by either decrementing the quantity of a product by 1 or deleting a product from the cart.
-// - Get cart id in request body.
-// - Get productId in request body.
-// - Get key 'removeProduct' in request body. 
-// - Make sure that cart exist.
-// - Key 'removeProduct' denotes whether a product is to be removed({removeProduct: 0}) or its quantity has to be decremented by 1({removeProduct: 1}).
-// - Make sure the userId in params and in JWT token match.
-// - Make sure the user exist
-// - Get product(s) details in response body.
-// - Check if the productId exists and is not deleted before updating the cart.
-// - __Response format__
-//   - _**On success**_ - Return HTTP status 200. Also return the updated cart document. The response should be a JSON object like [this](#successful-response-structure)
-//   - _**On error**_ - Return a suitable error message with a valid HTTP status code. The response should be a JSON object like [this](#error-response-structure)
+
+
+//<<<===================== This function is used for Fetch the Cart Data From DB =====================>>>//
+const getCart = async (req, res) => {
+
+    try {
+
+        let userId = req.params.userId;
+
+        //===================== Fetch Cart Data from DB =====================//
+        let carts = await cartModel.findOne({ userId: userId }).populate('items.productId')
+        if (!carts) return res.status(404).send({ status: false, message: "cart does not exist!" })
+
+        //===================== Return Responce =====================//
+        return res.status(200).send({ status: true, message: 'Success', data: carts })
+
+    } catch (error) {
+
+        return res.status(500).send({ status: false, error: error.message })
+    }
+}
+
+
+//<<<===================== This function is used for Delete the Cart Data =====================>>>//
+const deleteCart = async (req, res) => {
+
+    try {
+
+        let userId = req.params.userId;
+
+        //===================== Fetch Cart Data from DB and Delete Cart =====================//
+        let cartDelete = await cartModel.findOneAndUpdate({ userId: userId }, { $set: { items: [], totalPrice: 0, totalItems: 0 } }, { new: true })
+        if (!cartDelete) return res.status(404).send({ status: false, message: "cart does not exist!" })
+
+        //===================== Return Responce =====================//
+        return res.status(204).send()
+
+    } catch (error) {
+
+        return res.status(500).send({ status: false, error: error.message })
+    }
+}
+
+
+
 
 
 
 //===================== Module Export =====================//
-
 module.exports = { createCart, getCart, deleteCart, updateCart }

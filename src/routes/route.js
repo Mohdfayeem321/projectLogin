@@ -4,7 +4,9 @@ const router = express.Router();
 const { Authentication, Authorization } = require('../MiddleWare/auth')
 const { createUser, userLogin, getUser, updateUserData } = require('../Controller/userController')
 const { createProduct, getProduct, getProductById, updateProduct, deleteProduct } = require('../Controller/productController')
-const { createCart,getCart,deleteCart,updateCart } = require('../Controller/cartController')
+const { createCart, getCart, deleteCart, updateCart } = require('../Controller/cartController')
+const { createOrder, updateOrder } = require('../Controller/orderController')
+
 
 
 //<<<=========================== USER's APIs(FEATURE I) ===========================>>>//
@@ -20,6 +22,7 @@ router.put("/user/:userId/profile", Authentication, Authorization, updateUserDat
 //<<<============================================================================>>>//
 
 
+
 //<<<===================== PRODUCT's APIs(FEATURE II) =====================>>>//
 
 //===================== User Registration (Post API) =====================//
@@ -28,24 +31,35 @@ router.post("/products", createProduct)
 router.get("/products", getProduct)
 //===================== Get User Data by Path Param (Get API) =====================//
 router.get("/products/:productId", getProductById)
-//===================== Get User Data by Path Param (Get API) =====================//
+//===================== Update Product (Put API) =====================//
 router.put("/products/:productId", updateProduct)
-//===================== Get User Data by Path Param (Get API) =====================//
+//===================== Delete Product (Delete API) =====================//
 router.delete("/products/:productId", deleteProduct)
 //<<<============================================================================>>>//
+
 
 
 //<<<===================== CART's APIs(FEATURE III) =====================>>>//
 
 //===================== Create Cart (Post API) =====================//
 router.post("/users/:userId/cart", Authentication, Authorization, createCart)
-
+//===================== Update Cart (Put API) =====================//
+router.put("/users/:userId/cart", Authentication, Authorization, updateCart)
+//===================== Get Cart Data (Get API) =====================//
 router.get("/users/:userId/cart", Authentication, Authorization, getCart)
-
+//===================== Delete Cart (Delete API) =====================//
 router.delete("/users/:userId/cart", Authentication, Authorization, deleteCart)
+//<<<============================================================================>>>//
 
-router.put("/users/:userId/cart",Authentication, Authorization, updateCart)
 
+
+//<<<===================== Order's APIs(FEATURE IV) =====================>>>//
+
+//===================== Create Order (Post API) =====================//
+router.post("/users/:userId/orders", Authentication, Authorization, createOrder)
+//===================== Create Order (Put API) =====================//
+router.put("/users/:userId/orders", Authentication, Authorization, updateOrder)
+//<<<============================================================================>>>//
 
 
 
