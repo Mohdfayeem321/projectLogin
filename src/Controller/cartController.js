@@ -139,10 +139,12 @@ const updateCart = async (req, res) => {
 
         let data = req.body;
 
-        //===================== Destructuring Cart Body Data =====================//
+        //===================== Destructuring Cart Body Data ================================//
         let { cartId, productId, removeProduct } = data;
-
-        //===================== Checking the RemoveProduct Value =====================//
+        
+        //===================== Checking the RemoveProduct Value ============================//
+        
+        if (!validator.isValidBody(removeProduct)) { return res.status(400).send({ status: false, message: 'Please enter the removeProduct' }) }
         if (removeProduct != 0 && removeProduct != 1) { return res.status(400).send({ status: false, message: "RemoveProduct must be 0 or 1!" }) }
 
         //===================== Validation for CartID =====================//
@@ -156,10 +158,18 @@ const updateCart = async (req, res) => {
         //===================== Fetch the Product Data From DB =====================//
         let getProduct = await productModel.findOne({ _id: productId, isDeleted: false })
         if (!getProduct) return res.status(404).send({ status: false, message: "Product not exist!" })
+        
+
+
 
         //===================== Fetch the Cart Data From DB =====================//
         let getCart = await cartModel.findOne({ items: { $elemMatch: { productId: productId } } })
         if (!getCart) return res.status(404).send({ status: false, message: "Cart does not exist with this productId!" })
+        
+        if(getCart.items.length==0) return res.status(404).send({ status: false, message: "Product not exist in this cart" })
+        
+        if(getCart.userId!=userId) return res.status(400).send({ status: false, message: "doesn't belong cart for this userId" })
+        // checking for http code
 
         //===================== Set the Total Amount =====================//
         let totalAmount = getCart.totalPrice - getProduct.price
@@ -194,7 +204,7 @@ const updateCart = async (req, res) => {
             }
 
             //===================== Update that cart =====================//
-            let updatePrice = await cartModel.findOneAndUpdate({ _id: cartId }, { $set: { totalPrice: totalAmount, items: arr, totalItems: totalItems } }, { new: true })
+            let updatePrice = await cartModel.findOneAndUpdate({ _id: cartId}, { $set: { totalPrice: totalAmount, items: arr, totalItems: totalItems } }, { new: true })
 
             return res.status(200).send({ status: true, message: "Success", data: updatePrice })
 

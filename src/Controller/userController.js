@@ -29,7 +29,7 @@ const createUser = async (req, res) => {
 
         //===================== Convert from JSON String to JSON Object of Address =====================//
         //address = JSON.parse(address)
-        if((typeof address)!=Object) return res.status(400).send({status:false, message:"please enter address in object form"})
+        // if((typeof Object.values(address))!='object') return res.status(400).send({status:false, message:"please enter address in object form"})
         data.address = JSON.parse(address)
 
         //===================== Destructuring Address from Object Data =================================//
@@ -50,7 +50,7 @@ const createUser = async (req, res) => {
         if (!validator.isValidMobileNumber(phone)) { return res.status(400).send({ status: false, message: 'Please enter valid Mobile Number' }) }
 
         if (!validator.isValidBody(password)) { return res.status(400).send({ status: false, message: 'Please enter the password' }) }
-        if (!validator.isValidpassword(password)) { return res.status(400).send({ status: false, message: "password should be have minimum 8 character and max 15 character" }) }
+        if (!validator.isValidpassword(password)) { return res.status(400).send({ status: false, message: "password should be have first character in uppercase, minimum 8 character and max 15 character" }) }
 
 
         //===================== Validation of Shipping Address =====================//
@@ -77,6 +77,14 @@ const createUser = async (req, res) => {
         if (!validator.isValidPin(billing.pincode)) { return res.status(400).send({ status: false, message: 'Invalid billing Pin Code.' }) }
 
 
+         //===================== Fetching data of Email from DB and Checking Duplicate Email or Phone is Present or Not =====================//
+         const isDuplicateEmail = await userModel.findOne({ $or: [{ email: email }, { phone: phone }] })
+         if (isDuplicateEmail) {
+             if (isDuplicateEmail.email == email) { return res.status(400).send({ status: false, message: `This EmailId: ${email} is already exist!` }) }
+             if (isDuplicateEmail.phone == phone) { return res.status(400).send({ status: false, message: `This Phone No.: ${phone} is already exist!` }) }
+         }
+
+
         //===================== Checking the File is present or not and Create S3 Link =====================//
         if (files && files.length > 0) {
             if (files.length > 1) return res.status(400).send({ status: false, message: "You can't enter more than one file for Create!" })
@@ -91,12 +99,7 @@ const createUser = async (req, res) => {
         data.password = await bcrypt.hash(password, saltRounds)
 
 
-        //===================== Fetching data of Email from DB and Checking Duplicate Email or Phone is Present or Not =====================//
-        const isDuplicateEmail = await userModel.findOne({ $or: [{ email: email }, { phone: phone }] })
-        if (isDuplicateEmail) {
-            if (isDuplicateEmail.email == email) { return res.status(400).send({ status: false, message: `This EmailId: ${email} is already exist!` }) }
-            if (isDuplicateEmail.phone == phone) { return res.status(400).send({ status: false, message: `This Phone No.: ${phone} is already exist!` }) }
-        }
+       
 
 
         //===================== Create a Object of User ===========================================//

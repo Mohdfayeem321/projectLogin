@@ -67,7 +67,7 @@ const createOrder = async (req, res) => {                              //Populat
         let orderCreate = await orderModel.create(obj)
 
         //===================== Update or Delete that Cart Data in DB =====================//
-        await cartModel.findOneAndUpdate({ _id: cartId }, { items: [], totalItems: 0, totalPrice: 0 })
+        await cartModel.findOneAndUpdate({ _id: cartId, userId:userId }, { items: [], totalItems: 0, totalPrice: 0 })
 
         //===================== Return response for successful Order creation =====================//
         return res.status(201).send({ status: true, message: "Success", data: orderCreate })
@@ -121,7 +121,7 @@ const updateOrder = async (req, res) => {
         if (!cartDetails) { return res.status(404).send({ status: false, message: "Cart doesn't exist!" }) }
 
         //===================== Final Order Updation =====================//
-        let orderUpdate = await orderModel.findByIdAndUpdate({ _id: orderId, userId: userId }, { status: status }, { new: true })
+        let orderUpdate = await orderModel.findOneAndUpdate({ _id: orderId, userId: userId }, { status: status }, { new: true })
 
         //===================== Return Response for Updatation Successful =====================//
         return res.status(200).send({ status: true, message: "Success", data: orderUpdate })
@@ -136,5 +136,6 @@ const updateOrder = async (req, res) => {
 
 
 
-//===================== Module Export =====================//
+//===================== Module Export =========================================================//
+
 module.exports = { createOrder, updateOrder }
