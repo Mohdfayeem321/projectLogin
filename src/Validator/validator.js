@@ -1,9 +1,6 @@
 //=====================Importing Module and Packages=====================//
 const mongoose = require('mongoose')
 
-
-
-
 //<<<==================================== Function for validation =======================================>>>//
 
 //===================== Checking that there is something as Input =====================//
@@ -19,9 +16,6 @@ const isValidBody = function (value) {
    
     return true
 }
-
-
-
 
 //===================== Function to validate the input value with Regex =====================//
 

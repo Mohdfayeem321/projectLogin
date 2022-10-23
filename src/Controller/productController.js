@@ -1,13 +1,12 @@
 //===================== Importing Module and Packages =====================//
+
 const productModel = require('../Model/productModel')
 const uploadFile = require('../aws/config')
 const validator = require('../Validator/validator')
 
 
-
-
-
 //<<<===================== This function is used for Create Product Data =====================>>>//
+
 const createProduct = async (req, res) => {
 
     try {
@@ -115,9 +114,6 @@ const createProduct = async (req, res) => {
         return res.status(500).send({ status: false, error: error.message })
     }
 }
-
-
-
 
 
 //<<<===================== This function is used for Get Data of Products =====================>>>//
@@ -361,10 +357,8 @@ const updateProduct = async (req, res) => {
 }
 
 
-
-
-
 //<<<===================== This function is used for Delete Product Data By Path Param =====================>>>//
+
 const deleteProduct = async (req, res) => {
 
     try {
@@ -389,8 +383,6 @@ const deleteProduct = async (req, res) => {
 }
 
 
-
-
-
 //===================== Module Export =====================//
+
 module.exports = { createProduct, getProduct, getProductById, updateProduct, deleteProduct }

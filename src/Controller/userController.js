@@ -6,9 +6,6 @@ const saltRounds = 10
 const uploadFile = require('../aws/config')
 const validator = require('../Validator/validator')
 
-
-
-
 //<<<===================== This function is used for Create User =====================>>>//
 const createUser = async (req, res) => {
 
@@ -79,12 +76,19 @@ const createUser = async (req, res) => {
         //===================== Encrept the password by thye help of Bcrypt =====================//
         data.password = await bcrypt.hash(password, saltRounds)
 
+        
+        //===================== Fetching data of Email from DB and Checking Duplicate Email or Phone is Present or Not =====================//
+        
+        const isDuplicateEmail = await userModel.findOne({ $or: [{ email: email }, { phone: phone }] })
+        if (isDuplicateEmail) {
+            if (isDuplicateEmail.email == email) { return res.status(400).send({ status: false, message: `This EmailId: ${email} is already exist!` }) }
+            if (isDuplicateEmail.phone == phone) { return res.status(400).send({ status: false, message: `This Phone No.: ${phone} is already exist!` }) }
+        }
 
-       
 
-
-        //===================== Checking the File is present or not and Create S3 Link =====================//
-        if (files && files.length > 0) {
+       //===================== Checking the File is present or not and Create S3 Link =====================//
+        
+       if (files && files.length > 0) {
 
             if (files.length > 1) return res.status(400).send({ status: false, message: "You can't enter more than one file for Create!" })
             if (!validator.isValidImage(files[0]['originalname'])) { return res.status(400).send({ status: false, message: "You have to put only Image." }) }
@@ -97,6 +101,7 @@ const createUser = async (req, res) => {
 
 
         //x===================== Final Creation of User =====================x//
+        
         let userCreated = await userModel.create(data)
 
         return res.status(201).send({ status: true, message: "User created successfully", data: userCreated })
@@ -112,6 +117,7 @@ const createUser = async (req, res) => {
 
 
 //<<<===================== This function is used for Login the User =====================>>>//
+
 const userLogin = async function (req, res) {
 
     try {
@@ -150,7 +156,7 @@ const userLogin = async function (req, res) {
                 exp: Math.floor(Date.now() / 1000) + 60 * 60
             }
 
-            const token = JWT.sign({ payload }, "We-are-from-Group-21", { expiresIn: "5d" });
+            const token = JWT.sign({ payload }, "We-are-from-Group-21", { expiresIn: "2d" });
 
             //=====================Create a Object for Response=====================//
             let obj = { userId: userData['_id'], token: token }
@@ -168,11 +174,8 @@ const userLogin = async function (req, res) {
     }
 }
 
-
-
-
-
 //<<<===================== This function is used for Get Data of User =====================>>>//
+
 const getUser = async function (req, res) {
 
     try {
@@ -181,11 +184,13 @@ const getUser = async function (req, res) {
         let tokenUserId = req.token.payload.userId
 
         //===================== Checking the userId is Valid or Not by Mongoose =====================//
+        
         if (!validator.isValidObjectId(userId)) return res.status(400).send({ status: false, message: `Please Enter Valid UserId: ${userId}.` })
 
         if (userId !== tokenUserId) { return res.status(403).send({ status: false, message: "You are not Authorized to get User Details." }) }
 
         //x=====================Fetching All Data from Book DB=====================x//
+        
         let getUser = await userModel.findOne({ _id: userId })
         if (!getUser) return res.status(404).send({ status: false, message: "User Data Not Found" })
 
@@ -199,9 +204,8 @@ const getUser = async function (req, res) {
 
 
 
-
-
 //<<<===================== This function is used for Update the User =====================>>>//
+
 const updateUserData = async function (req, res) {
 
     try {
@@ -285,7 +289,7 @@ const updateUserData = async function (req, res) {
         //x===================== Final Updation of User Document =====================x//
         let updateUser = await userModel.findOneAndUpdate({ _id: userId }, { $set: obj }, { new: true })
 
-        if(!updateUser){ return res.status(200).send({ status: true, message: "User not exist with this UserId."})    }
+        if(!updateUser){ return res.status(404).send({ status: true, message: "User not exist with this UserId."})    }
 
 
         return res.status(200).send({ status: true, message: "User profile updated", data: updateUser })

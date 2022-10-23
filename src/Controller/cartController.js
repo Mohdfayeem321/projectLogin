@@ -3,9 +3,6 @@ const cartModel = require('../Model/cartModel')
 const productModel = require('../Model/productModel')
 const validator = require('../Validator/validator')
 
-
-
-
 //<<<===================== This function is used for Create Cart Data =====================>>>//
 const createCart = async (req, res) => {
 
@@ -22,6 +19,7 @@ const createCart = async (req, res) => {
         if (validator.checkInputsPresent(rest)) { return res.status(400).send({ status: false, message: "You can input only cartId, productId." }) }
 
         //===================== Validation of productId =====================//
+        if(typeof productId!=='string') return res.status(400).send({ status: false, message: "you have to put productId in string format only" })
         if (!validator.isValidBody(productId)) return res.status(400).send({ status: false, message: "Enter ProductId." })
         if (!validator.isValidObjectId(productId)) return res.status(400).send({ status: false, message: `This ProductId: ${productId} is not valid!` })
 

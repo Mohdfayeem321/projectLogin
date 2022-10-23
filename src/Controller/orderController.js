@@ -3,9 +3,6 @@ const orderModel = require('../Model/orderModel')
 const cartModel = require('../Model/cartModel')
 const validator = require('../Validator/validator')
 
-
-
-
 //<<<===================== This function is used for Create Cart Data =====================>>>//
 const createOrder = async (req, res) => {                              
 
@@ -109,7 +106,7 @@ const updateOrder = async (req, res) => {
         if (checkStatus.status) {
 
             if (checkStatus.status == 'completed') { return res.status(200).send({ status: true, message: "Your Order have been placed." }) }
-            if (checkStatus.status == 'cancelled') { return res.status(200).send({ status: true, message: "Your Order already cancelled." }) }
+            if (checkStatus.status == 'cancelled') { return res.status(200).send({ status: true, message: "Your Order is already cancel." }) }
 
         }
 
