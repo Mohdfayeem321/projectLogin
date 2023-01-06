@@ -34,9 +34,9 @@ router.get("/products", getProduct)
 //===================== Get User Data by Path Param (Get API) =====================//
 router.get("/products/:productId", getProductById)
 //===================== Update Product (Put API) =====================//
-router.put("/products/:adminId", updateProduct)
+router.put("/products/:adminId", Authentication, Authorization, updateProduct)
 //===================== Delete Product (Delete API) =====================//
-router.delete("/products/:adminId", deleteProduct)
+router.delete("/products/:adminId", Authentication, Authorization, deleteProduct)
 //<<<============================================================================>>>//
 
 

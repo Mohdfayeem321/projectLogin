@@ -17,8 +17,8 @@ const createProduct = async (req, res) => {
         let { title, price,  ...rest } = data
 
         //===================== Checking Mandotory Field =====================//
-        if (!validator.checkInputsPresent(data)) return res.status(400).send({ status: false, message: "No data found from body! You need to put the Mandatory Fields (i.e. title, description, price, currencyId, currencyFormat, productImage). " });
-        if (validator.checkInputsPresent(rest)) { return res.status(400).send({ status: false, message: "You can input only title, description, price, currencyId, currencyFormat, isFreeShipping, productImage, style, availableSizes, installments." }) }
+        if (!validator.checkInputsPresent(data)) return res.status(400).send({ status: false, message: "No data found from body! You need to put the Mandatory Fields ( title,price). " });
+        if (validator.checkInputsPresent(rest)) { return res.status(400).send({ status: false, message: "You can input only title and price " }) }
 
 
         //===================== Validation of title =====================//
@@ -54,24 +54,27 @@ const getProduct = async (req, res) => {
 
     try {
 
-        let data = req.query
+        let data = req.body;
+
+        const { page = 1, limit = 10 } = req.query
 
         //===================== Destructuring User Body Data =====================//
         let { title, price, ...rest } = data
 
         //===================== Checking Mandotory Field =====================//
-        if (validator.checkInputsPresent(rest)) { return res.status(400).send({ status: false, message: "You can input only size, name, priceGreaterThan, priceLessThan, priceSort." }) }
+        if (validator.checkInputsPresent(rest)) { return res.status(400).send({ status: false, message: "You can input only title and price." }) }
 
         if (!validator.checkInputsPresent(data)) {
 
-            let productData = await productModel.find({ isDeleted: false }).sort('-createdAt')
+            let productData = await productModel.find({ isDeleted: false }).limit(limit*1).skip((page-1)*limit).sort('-createdAt')
 
             if (productData.length == 0) return res.status(404).send({ status: false, message: "Products not found" })
 
-            return res.status(200).send({ status: true, message: "Success", data: productData });
+            return res.status(200).send({ status: true, message: "Success", data: productData.length, productData });
         }
 
         //===================== Create a Object of Product =====================//
+        
         let obj = { isDeleted: false }
 
         if(title){
@@ -148,7 +151,7 @@ const updateProduct = async (req, res) => {
 
         //===================== Checking Body ==========================================================//
 
-        if (!validator.checkInputsPresent(data) && !(files)) return res.status(400).send({ status: false, message: "You have to put atleast one key to update Product (i.e. title, description, price, isFreeShipping, style, availableSizes, installments, productImage). " });
+        if (!validator.checkInputsPresent(data)) return res.status(400).send({ status: false, message: "You have to put atleast one key to update Product (i.e. title, description, price, isFreeShipping, style, availableSizes, installments, productImage). " });
 
         if (validator.checkInputsPresent(rest)) { return res.status(400).send({ status: false, message: "You can enter to update only title, description, price, isFreeShipping, style, availableSizes, installments, productImage." }) }
 
