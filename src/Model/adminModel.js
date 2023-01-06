@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 
 
 //===================== Creating User's Schema =====================//
-const userSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
 
     fname: {
         type: String,
@@ -33,4 +33,4 @@ const userSchema = new mongoose.Schema({
 
 
 //===================== Module Export =====================//
-module.exports = mongoose.model('User', userSchema)
+module.exports = mongoose.model('Admin', adminSchema)

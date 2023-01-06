@@ -1,10 +1,11 @@
-const userModel = require('../Model/userModel.js')
+const adminModel = require("../Model/adminModel");
 
 const validator = require("../Validator/validator")
 
 const JWT = require("jsonwebtoken")
+
 //<<<===================== This function is used for Create User =====================>>>//
-const createUser = async (req, res) => {
+const createAdmin = async (req, res) => {
 
     try {
 
@@ -14,8 +15,8 @@ const createUser = async (req, res) => {
         let { fname, lname, email, password, ...rest } = data
 
         //===================== Checking User Body Data =====================//
-        if (!validator.checkInputsPresent(data)) return res.status(400).send({ status: false, message: "No data found from body! You need to put the Mandatory Fields (i.e. fname, lname, email, profileImage, phone, password & address). " });
-        if (validator.checkInputsPresent(rest)) { return res.status(400).send({ status: false, message: "You can input only fname, lname, email, profileImage, phone, password & address." }) }
+        if (!validator.checkInputsPresent(data)) return res.status(400).send({ status: false, message: "No data found from body! You need to put the Mandatory Fields (i.e. fname, lname, email, password " });
+        if (validator.checkInputsPresent(rest)) { return res.status(400).send({ status: false, message: "You can input only fname, lname, email, password" }) }
 
 
 
@@ -37,15 +38,14 @@ const createUser = async (req, res) => {
 
         //===================== Fetching data of Email from DB and Checking Duplicate Email or Phone is Present or Not =====================//
 
-        const isDuplicateEmail = await userModel.findOne({ email: email })
+        let isDuplicateEmail = await adminModel.findOne({email})
         if (isDuplicateEmail) { return res.status(400).send({ status: false, message: `This EmailId: ${email} is already exist!` }) }
-
 
         //x===================== Final Creation of User =====================x//
 
-        let userCreated = await userModel.create(data)
+        let adminCreated = await adminModel.create(data)
 
-        return res.status(201).send({ status: true, message: "Admin created successfully", data: userCreated })
+        return res.status(201).send({ status: true, message: "Admin created successfully", data: adminCreated })
 
     } catch (error) {
 
@@ -59,7 +59,7 @@ const createUser = async (req, res) => {
 
 //<<<===================== This function is used for Login the User =====================>>>//
 
-const userLogin = async function (req, res) {
+const adminLogin = async function (req, res) {
 
     try {
 
@@ -80,21 +80,21 @@ const userLogin = async function (req, res) {
         if (!validator.isValidpassword(password)) { return res.status(400).send({ status: false, message: "Invalid Password Format! Password Should be 8 to 15 Characters and have a mixture of uppercase and lowercase letters and contain one symbol and then at least one Number." }) }
 
         //===================== Fetch Data from DB =====================//
-        const userData = await userModel.findOne({ email: email, password:password})
-        if (!userData) { return res.status(401).send({ status: false, message: "Invalid Login Credentials! You need to register first." }) }
+        const adminData = await adminModel.findOne({ email: email, password:password})
+        if (!adminData) { return res.status(401).send({ status: false, message: "Invalid Login Credentials! You need to register first." }) }
 
 
         let payload = {
-            userId: userData['_id'].toString(),
+            adminId: adminData['_id'].toString(),
             Project: "Node Js Interview Project",
         }
 
         const token = JWT.sign({ payload }, "User Login", { expiresIn: "2d" });
 
         //=====================Create a Object for Response=====================//
-        let obj = { userId: userData['_id'], token: token }
+        let obj = { adminId: adminData['_id'], token: token }
 
-        return res.status(200).send({ status: true, message: 'User login successfull', data: obj })
+        return res.status(200).send({ status: true, message: 'Admin login successfull', data: obj })
 
 
     } catch (error) {
@@ -104,4 +104,4 @@ const userLogin = async function (req, res) {
 }
 
 
-module.exports = { userLogin, createUser }
+module.exports = {createAdmin, adminLogin}

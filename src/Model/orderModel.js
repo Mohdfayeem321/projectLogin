@@ -28,10 +28,7 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    cancellable: {
-        type: Boolean,
-        default: true
-    },
+    
     status: {
         type: String,
         enum: ['pending', 'completed', 'cancelled'],
